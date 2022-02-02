@@ -25,11 +25,10 @@ middle_point = np.array([WIDTH/2, HEIGHT/2])
 
 while not rospy.is_shutdown():
     img = np.array(list(robot._cam_image.data), dtype=np.uint8)
-    cv2.imwrite("./capture.png",img)
     img = img.reshape(int(HEIGHT), int(WIDTH), 4)
     img = img[:, :, :3].copy()
 
-    cv2.imwrite("./grey.png",img)
+    #cv2.imwrite("./grey.png",img)
 
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray_img, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))

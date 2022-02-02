@@ -7,8 +7,10 @@ import numpy as np
 PI = 3.141592
 WIDTH = 960
 HEIGHT = 600
-CASC_PATH = "haarcascade_frontalface_default.xml"
-face_cascade = cv2.CascadeClassifier(CASC_PATH)
+print("[INFO] loading model...")
+PROTO = "./models/deploy.prototxt"
+MODEL = "./models/res10_300x300_ssd_iter_140000_fp16.caffemodel"
+net = cv2.dnn.readNetFromCaffe(PROTO, MODEL)
 
 rospy.init_node("testing")
 rospy.sleep(2.0)
@@ -29,6 +31,11 @@ while not rospy.is_shutdown():
     img = img[:, :, :3].copy()
 
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    blob = cv2.dnn.blobFromImage(cv2.resize(img, (300, 300)), 1.0, (300, 300), (104.0, 177.0, 123.0))
+    net.setInput(blob)
+    detections = net.forward()
+    
+
     faces = face_cascade.detectMultiScale(gray_img, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
     print(faces)
     if len(faces) > 0:
