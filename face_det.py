@@ -28,13 +28,13 @@ while not rospy.is_shutdown():
     img = img.reshape(int(HEIGHT), int(WIDTH), 4)
     img = img[:, :, :3].copy()
 
-    #cv2.imwrite("./grey.png",img)
+    #cv2.imwrite("./capture.png",img)
 
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray_img, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
     print(faces)
     if len(faces) > 0:
-        x, y, w, h = faces[0]
+        x, y, w, h = faces[0]  #get first face
         cv2.rectangle(img, (x, y), (x+w, y+h), (0, 0, 255), 2)
         robot._set_display_data(img)
         current_loc = np.array([x, y])

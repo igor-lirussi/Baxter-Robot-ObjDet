@@ -36,11 +36,21 @@ while not rospy.is_shutdown():
     detections = net.forward()
     
 
-    faces = face_cascade.detectMultiScale(gray_img, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
-    print(faces)
-    if len(faces) > 0:
-        x, y, w, h = faces[0]
-        cv2.rectangle(img, (x, y), (x+w, y+h), (0, 0, 255), 2)
+    conf_threshold=0.15
+    bboxes = []
+    for i in range(detections.shape[2]):
+        confidence = detections[0, 0, i, 2]
+        if confidence > conf_threshold:
+            x1 = int(detections[0, 0, i, 3] * WIDTH)
+            y1 = int(detections[0, 0, i, 4] * HEIGHT)
+            x2 = int(detections[0, 0, i, 5] * WIDTH)
+            y2 = int(detections[0, 0, i, 6] * HEIGHT)
+            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+    #TODO: ADAPT TO DNN OUTPUT
+    #if detections.shape[2] > 0:
+    if False:
+        x, y, w, h = faces[0]  #select last face
+        cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
         robot._set_display_data(img)
         current_loc = np.array([x, y])
         direction = current_loc - middle_point
@@ -48,6 +58,7 @@ while not rospy.is_shutdown():
         robot.set_joint_velocity({"left_s0": -direction[0]/2, "left_s1": direction[1]/2})
     else:
         robot._set_display_data(img)
+
     robot.rate.sleep()
 
 print(robot.move_to_neutral())
