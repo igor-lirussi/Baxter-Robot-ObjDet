@@ -37,7 +37,7 @@ while not rospy.is_shutdown():
 
     face_found_already = False
     #Passing image to DNN
-    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    #gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     blob = cv2.dnn.blobFromImage(cv2.resize(img, (300, 300)), 1.0, (300, 300), (104.0, 177.0, 123.0))
     net.setInput(blob)
     detections = net.forward()
