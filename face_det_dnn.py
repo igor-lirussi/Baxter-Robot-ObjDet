@@ -9,7 +9,7 @@ WIDTH = 960
 HEIGHT = 600
 
 print("[INFO] loading model...")
-PROTO = "./models/deploy.prototxt"
+PROTO = "./models/res10_deploy.prototxt"
 MODEL = "./models/res10_300x300_ssd_iter_140000_fp16.caffemodel"
 net = cv2.dnn.readNetFromCaffe(PROTO, MODEL)
 
