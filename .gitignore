@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 img/save.png
+ip_robot.txt
 models/yolov3.weights
 models/yolov3-openimages.weights
 models/yolov4-p6.weights
