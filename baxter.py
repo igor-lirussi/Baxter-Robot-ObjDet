@@ -32,7 +32,7 @@ class BaxterRobot:
         self._robot_state = rospy.Publisher("/robot/set_super_enable", Bool, queue_size=10)
         self._pub_joint_cmd = rospy.Publisher(ns+"joint_command", JointCommand, queue_size=1)
         self._joint_state_sub = rospy.Subscriber("/robot/joint_states", JointState, self._fill_joint_state)
-        self._cam_image_sub = rospy.Subscriber("/cameras/left_hand_camera/image", Image, self._fill_image_data)
+        self._cam_image_sub = rospy.Subscriber("/cameras/"+arm+"_hand_camera/image", Image, self._fill_image_data)
         self._pub_display = rospy.Publisher("/robot/xdisplay", Image, latch=True, queue_size=1)
 
     def joint_angle(self):
@@ -101,7 +101,7 @@ class BaxterRobot:
         msg = cv_bridge.CvBridge().cv2_to_imgmsg(image, encoding="bgr8")
         self._pub_display.publish(msg)
 
-    def _set_camera(self, camera_name, state, width=640, height=480, fps=30):
+    def _set_camera(self, camera_name, state, width=640, height=400, fps=30):
         if state:
             rospy.wait_for_service("/cameras/open")
             camera_proxy = rospy.ServiceProxy("/cameras/open", OpenCamera)
