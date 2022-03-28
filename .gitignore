@@ -7,6 +7,8 @@ ip_robot.txt
 models/yolov3.weights
 models/yolov3-openimages.weights
 models/yolov4-p6.weights
+models/yolov3-openimages-spp.weights
+
 
 # C extensions
 *.so
