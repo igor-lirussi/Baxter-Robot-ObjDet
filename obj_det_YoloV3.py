@@ -152,7 +152,7 @@ while not rospy.is_shutdown():
         draw_bounding_box(img, class_ids[i], confidences[i], round(x), round(y), round(x+w), round(y+h))
 
             
-    robot._set_display_data(img)
+    robot._set_display_data(cv2.resize(img, (1024,600)))
     robot.rate.sleep()
 
 print(robot.move_to_neutral())

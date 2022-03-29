@@ -36,13 +36,13 @@ while not rospy.is_shutdown():
     if len(faces) > 0:
         x, y, w, h = faces[0]  #get first face
         cv2.rectangle(img, (x, y), (x+w, y+h), (0, 0, 255), 2)
-        robot._set_display_data(img)
+        robot._set_display_data(cv2.resize(img, (1024,600)))
         current_loc = np.array([x, y])
         direction = current_loc - middle_point
         direction = direction / np.array([WIDTH/2, HEIGHT/2])
         robot.set_joint_velocity({"left_s0": -direction[0]/2, "left_s1": direction[1]/2})
     else:
-        robot._set_display_data(img)
+        robot._set_display_data(cv2.resize(img, (1024,600)))
     robot.rate.sleep()
 
 print(robot.move_to_neutral())

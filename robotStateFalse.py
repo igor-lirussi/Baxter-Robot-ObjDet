@@ -11,6 +11,7 @@ rospy.sleep(2.0)
 
 robotL.set_robot_state(True)
 
+#sequential movements
 #print(robotL.move_to_neutral())
 #print(robotR.move_to_neutral())
 

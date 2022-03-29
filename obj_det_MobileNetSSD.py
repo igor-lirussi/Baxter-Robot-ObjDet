@@ -70,7 +70,7 @@ while not rospy.is_shutdown():
             cv2.putText(img, label, (startX, y),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0), 2)
 
         
-    robot._set_display_data(img)
+    robot._set_display_data(cv2.resize(img, (1024,600)))
     robot.rate.sleep()
 
 print(robot.move_to_neutral())
