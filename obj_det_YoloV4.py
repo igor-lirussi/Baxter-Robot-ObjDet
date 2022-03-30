@@ -10,43 +10,39 @@ WIDTH = 960
 HEIGHT = 600
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-m', '--model', type=str, default='yolov3', help='Model desired')
+parser.add_argument('-m', '--model', type=str, default='yolov4', help='Model desired')
 args = parser.parse_args()
-model_list = ["yolov3","yolov3-openimages","yolov3-openimages-spp"]
+model_list = ["yolov4","yolov4-new"]
 
 print("[INFO] loading model...")
 if args.model == model_list[0]:
     #Load net
-    modelConfig  = "./models/yolov3.cfg"
-    modelWeigths = "./models/yolov3.weights"
+    modelConfig  = "./models/yolov4.cfg"
+    modelWeigths = "./models/yolov4.weights"
     net = cv2.dnn.readNetFromDarknet(modelConfig, modelWeigths)
-    print("Net Loaded: {}".format(args.model))
+    print("Net Loaded")
 
     with open('./models/coco.names', 'r') as f:
         classes = f.read().splitlines()
     print("Classes: {}".format(len(classes)))
 
+    conf_threshold = 0.1
+    nms_threshold = 0.6 #lower=stronger
+
 elif args.model == model_list[1]:
     #Load net
-    modelConfig  = "./models/yolov3-openimages.cfg"
-    modelWeigths = "./models/yolov3-openimages.weights"
+    modelConfig  = "./models/yolov4_new.cfg"
+    modelWeigths = "./models/yolov4_new.weights"
     net = cv2.dnn.readNetFromDarknet(modelConfig, modelWeigths)
-    print("Net Loaded: {}".format(args.model))
+    print("Net Loaded")
 
-    with open('./models/open_images_yolo.names', 'r') as f:
+    with open('./models/coco.names', 'r') as f:
         classes = f.read().splitlines()
     print("Classes: {}".format(len(classes)))
 
-elif args.model == model_list[2]:
-    #Load net
-    modelConfig  = "./models/yolov3-openimages-spp.cfg"
-    modelWeigths = "./models/yolov3-openimages-spp.weights"
-    net = cv2.dnn.readNetFromDarknet(modelConfig, modelWeigths)
-    print("Net Loaded: {}".format(args.model))
-
-    with open('./models/open_images.names', 'r') as f:
-        classes = f.read().splitlines()
-    print("Classes: {}".format(len(classes)))
+    #suggested
+    conf_threshold = 0.35
+    nms_threshold = 0.05 #lower=stronger
 
 else:
     print("[Error] Model passed not present, choose between: {}".format(model_list))
@@ -114,8 +110,6 @@ while not rospy.is_shutdown():
     class_ids = []
     confidences = []
     boxes = []
-    conf_threshold = 0.1 #confidence threshold
-    nms_threshold = 0.40 
 
     # for each detetion from each output layer 
     # get the confidence, class id, bounding box params

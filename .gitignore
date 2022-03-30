@@ -6,8 +6,16 @@ img/save.png
 ip_robot.txt
 models/yolov3.weights
 models/yolov3-openimages.weights
-models/yolov4-p6.weights
 models/yolov3-openimages-spp.weights
+models/yolov4-p6-1280x1280.weights
+models/yolov4.weights
+models/yolov4_new.weights
+models/yolov4x-mish.weights
+models/yolov4-csp.weights
+
+
+
+
 
 
 # C extensions
