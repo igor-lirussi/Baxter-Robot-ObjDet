@@ -3,9 +3,9 @@ from copy import deepcopy
 import rospy
 import cv_bridge
 from baxter_core_msgs.msg import JointCommand, EndpointState, CameraSettings
-from baxter_core_msgs.srv import OpenCamera, CloseCamera
+from baxter_core_msgs.srv import OpenCamera, CloseCamera, SolvePositionIK, SolvePositionIKRequest
 from std_msgs.msg import Bool, Header
-from geometry_msgs.msg import Pose, Point, Quaternion
+from geometry_msgs.msg import Pose, Point, Quaternion, PoseStamped
 from sensor_msgs.msg import JointState, Image
 
 
@@ -24,7 +24,10 @@ class BaxterRobot:
         self._joint_names = ["_s0", "_s1", "_e0", "_e1", "_w0", "_w1", "_w2"]
         self._joint_names = [arm+x for x in self._joint_names]
         ns = "/robot/limb/" + arm + "/"
-
+        iksvc_ns = "/ExternalTools/" + arm + "/PositionKinematicsNode/IKService"
+        self.iksvc = rospy.ServiceProxy(iksvc_ns, SolvePositionIK)
+        rospy.wait_for_service(iksvc_ns)
+        print("IK service loaded.")
         self._cam_image = Image()
 
         self._command_msg = JointCommand()
@@ -42,6 +45,43 @@ class BaxterRobot:
         msg = Bool()
         msg.data = state
         self._robot_state.publish(msg)
+
+    def set_cartesian_position(self, position, orientation):
+        hdr = Header(stamp=rospy.Time.now(), frame_id="base")
+        msg = PoseStamped(
+            header=hdr,
+            pose=Pose(
+                position=Point(
+                    x=position[0],
+                    y=position[1],
+                    z=position[2]
+                ),
+                orientation=Quaternion(
+                    x=orientation[0],
+                    y=orientation[1],
+                    z=orientation[2],
+                    w=orientation[3]
+                )
+            )
+        )
+        ikreq = SolvePositionIKRequest()
+        ikreq.pose_stamp.append(msg)
+        resp = self.iksvc(ikreq)
+        if resp.isValid[0]:
+            self.move_to_joint_position(
+                {
+                    self.name+"_s0": resp.joints[0].position[0],
+                    self.name+"_s1": resp.joints[0].position[1],
+                    self.name+"_e0": resp.joints[0].position[2],
+                    self.name+"_e1": resp.joints[0].position[3],
+                    self.name+"_w0": resp.joints[0].position[4],
+                    self.name+"_w1": resp.joints[0].position[5],
+                    self.name+"_w2": resp.joints[0].position[6],
+                }
+            )
+        else:
+            print("[Error] position invalid!")
+        return resp.isValid[0]
 
     def set_joint_position(self, positions):
         self._command_msg.names = list(positions.keys())
