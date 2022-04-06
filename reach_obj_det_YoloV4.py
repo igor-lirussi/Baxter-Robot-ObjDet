@@ -14,7 +14,7 @@ DISPLAY_FACE=True
 unreachable_count=0
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-m', '--model', type=str, default='yolov4', help='Model desired')
+parser.add_argument('-m', '--model', type=str, default='yolov4-new', help='Model desired')
 args = parser.parse_args()
 model_list = ["yolov4","yolov4-new", "yolov4x-mish", "yolov4-p6"]
 
@@ -239,13 +239,14 @@ while not rospy.is_shutdown():
         if delta_y==0 and delta_x ==0:
             delta_z=-0.05
         #move
-        print("DELTA X:{} Y:{} Z:{}".format(delta_x, delta_y, delta_z))
+        print("DELTA MOVEMENT X:{} Y:{} Z:{}".format(delta_x, delta_y, delta_z))
         movement_valid = robot.set_cartesian_position([p.x+delta_x, p.y+delta_y, p.z+delta_z], [q.x, q.y, q.z, q.w])
         if movement_valid:
             print("[info] movement ok")
             unreachable_count=0
         elif not movement_valid and unreachable_count<4:
             unreachable_count=unreachable_count+1
+            print("[info] Moving Unreachable: {}".format(unreachable_count))
         elif not movement_valid and unreachable_count>3:
             #set to origin
             print("[info] Moving to Origin")
