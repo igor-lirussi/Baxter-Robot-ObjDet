@@ -12,6 +12,7 @@ WIDTH = 960
 HEIGHT = 600
 DISPLAY_FACE=True
 unreachable_count=0
+garabbed=False
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--model', type=str, default='yolov4-new', help='Model desired')
@@ -208,11 +209,24 @@ while not rospy.is_shutdown():
             cv2.putText(img, "X", (object_x,object_y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 2) 
             cv2.putText(img, "O", (round(WIDTH/2),round(HEIGHT/2)), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 3) 
 
+    
+    #if near: grab
+    if robot._ir_range.range > robot._ir_range.min_range and robot._ir_range.range < robot._ir_range.max_range:
+        distance_str= "Dist: {:0.2f}".format(robot._ir_range.range)
+        print(distance_str)
+        cv2.putText(img, distance_str, (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 2) 
+        if robot._ir_range.range < 0.16:
+            print("[info] Gripper close enough, GRASPING")
+            garabbed = True
+    else:
+        print("Range sensor out of limits")
+        cv2.putText(img, "Dist: OUT", (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 2) 
+
+    #display image
     robot._set_display_data(cv2.resize(img, (1024,600)))
 
-    #if near: grab
-    #if not close enough to the table to start grabbing
-    if object_present:
+    #if present and not close enough: move towards it
+    if object_present and not garabbed:
         #get current arm position
         msg = rospy.wait_for_message("/robot/limb/left/endpoint_state", EndpointState)
         p = msg.pose.position
@@ -242,15 +256,17 @@ while not rospy.is_shutdown():
         print("DELTA MOVEMENT X:{} Y:{} Z:{}".format(delta_x, delta_y, delta_z))
         movement_valid = robot.set_cartesian_position([p.x+delta_x, p.y+delta_y, p.z+delta_z], [q.x, q.y, q.z, q.w])
         if movement_valid:
-            print("[info] movement ok")
+            print("[info] Movement OK")
             unreachable_count=0
         elif not movement_valid and unreachable_count<4:
             unreachable_count=unreachable_count+1
-            print("[info] Moving Unreachable: {}".format(unreachable_count))
+            print("[info] Movement Unreachable count: {}".format(unreachable_count))
         elif not movement_valid and unreachable_count>3:
             #set to origin
             print("[info] Moving to Origin")
             robot.set_cartesian_position([pos_x, pos_y, pos_z], [ori_x, ori_y, ori_z, ori_w])
+
+
 
 
 

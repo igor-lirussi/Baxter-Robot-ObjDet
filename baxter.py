@@ -3,10 +3,12 @@ from copy import deepcopy
 import rospy
 import cv_bridge
 from baxter_core_msgs.msg import JointCommand, EndpointState, CameraSettings
+from baxter_core_msgs.msg import EndEffectorCommand, EndEffectorProperties, EndEffectorState
 from baxter_core_msgs.srv import OpenCamera, CloseCamera, SolvePositionIK, SolvePositionIKRequest
 from std_msgs.msg import Bool, Header
 from geometry_msgs.msg import Pose, Point, Quaternion, PoseStamped
 from sensor_msgs.msg import JointState, Image
+from sensor_msgs.msg import Range
 
 
 class BaxterRobot:
@@ -37,6 +39,12 @@ class BaxterRobot:
         self._joint_state_sub = rospy.Subscriber("/robot/joint_states", JointState, self._fill_joint_state)
         self._cam_image_sub = rospy.Subscriber("/cameras/"+arm+"_hand_camera/image", Image, self._fill_image_data)
         self._pub_display = rospy.Publisher("/robot/xdisplay", Image, latch=True, queue_size=1)
+
+        
+        #self._grip_cmd_pub = rospy.Publisher('robot/end_effector/' + arm + "_gripper/" + 'command', EndEffectorCommand, queue_size=10)
+        self._ir_range = Range()
+        self._sub = rospy.Subscriber("/robot/range/"+arm+"_hand_range/state", Range, self._fill_ir_range)
+
 
     def joint_angle(self):
         return deepcopy(self._joint_angle)
@@ -136,6 +144,9 @@ class BaxterRobot:
     def _fill_image_data(self, msg):
         self._cam_image = msg
         # self._pub_display.publish(msg)
+
+    def _fill_ir_range(self, msg):
+        self._ir_range = msg
 
     def _set_display_data(self, image):
         msg = cv_bridge.CvBridge().cv2_to_imgmsg(image, encoding="bgr8")
