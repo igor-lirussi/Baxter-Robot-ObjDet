@@ -13,6 +13,7 @@ HEIGHT = 600
 DISPLAY_FACE=True
 unreachable_count=0
 garabbed=False
+OBJECT_DESIRED = "apple" #"carrot"
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--model', type=str, default='yolov4-new', help='Model desired')
@@ -48,7 +49,7 @@ elif args.model == model_list[1]:
 
     #suggested
     conf_threshold = 0.35
-    nms_threshold = 0.04 #lower=stronger
+    nms_threshold = 0.03 #lower=stronger
 
 elif args.model == model_list[2]:
     #Load net
@@ -115,6 +116,13 @@ robot = baxter.BaxterRobot(rate=100, arm="left")
 rospy.sleep(2.0)
 robot._set_camera(camera_name="left_hand_camera", state=True, width=WIDTH, height=HEIGHT, fps=30)
 robot.set_robot_state(True)
+
+
+rospy.sleep(2.0)
+print("[INFO] calibrate gripper...")
+robot.gripper_calibrate()
+rospy.sleep(2.0)
+robot.gripper_release()
 
 #display face
 _set_look(robot, "left_down", DISPLAY_FACE)
@@ -201,24 +209,39 @@ while not rospy.is_shutdown():
         h = box[3]
         draw_bounding_box(img, class_ids[i], confidences[i], round(x), round(y), round(x+w), round(y+h))
         #save X Y object if present
-        if classes[class_ids[i]] == "carrot":
+        if classes[class_ids[i]] == OBJECT_DESIRED:
             object_present=True
             object_x = round(x+(w/2))
             object_y = round(y+(h/2))
+            center_object_x = round(WIDTH/2)
+            center_object_y = round(HEIGHT/2)-20 #the gripper is a litte up compared to the camera
             print("{} found at: {} {}, size: {} {}".format(classes[class_ids[i]],object_x,object_y, w,h))
             cv2.putText(img, "X", (object_x,object_y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 2) 
-            cv2.putText(img, "O", (round(WIDTH/2),round(HEIGHT/2)), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 3) 
+            cv2.putText(img, "O", (center_object_x,center_object_y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 3) 
 
     
     #if near: grab
     if robot._ir_range.range > robot._ir_range.min_range and robot._ir_range.range < robot._ir_range.max_range:
+        current_range = robot._ir_range.range
         distance_str= "Dist: {:0.2f}".format(robot._ir_range.range)
         print(distance_str)
         cv2.putText(img, distance_str, (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 2) 
-        if robot._ir_range.range < 0.16:
+        if current_range < 0.15  and not garabbed:
             print("[info] Gripper close enough, GRASPING")
             garabbed = True
+            #grab
+            robot.gripper_grip()
+            rospy.sleep(2.0)
+            #move
+            robot.set_cartesian_position([pos_x, pos_y, pos_z], [ori_x, ori_y, ori_z, ori_w])
+            robot.move_to_zero()
+            rospy.sleep(2.0)
+            robot.gripper_release()
+            garabbed=False
+            rospy.sleep(2.0)
+            robot.set_cartesian_position([pos_x, pos_y, pos_z], [ori_x, ori_y, ori_z, ori_w])
     else:
+        current_range = 9999
         print("Range sensor out of limits")
         cv2.putText(img, "Dist: OUT", (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 2) 
 
@@ -232,26 +255,29 @@ while not rospy.is_shutdown():
         p = msg.pose.position
         q = msg.pose.orientation
         #compute deviation in image
-        delta_x_pixel=WIDTH/2 - object_x
-        delta_y_pixel=HEIGHT/2 - object_y
+        delta_x_pixel=center_object_x - object_x
+        delta_y_pixel=center_object_y - object_y
         print("DELTA PIXELS: {} and {}".format(delta_x_pixel, delta_y_pixel))
         #compute movement robot
         delta_x=0
         delta_y=0
-        delta_z=0.0 #always move down
+        delta_z=0
+        delta_movement=0.05
+        if current_range < 0.25: #if close to something move less
+            delta_movement = 0.02
         #if it's too on the side in X direction in the image move the robot on Y 
         if delta_x_pixel>40:
-            delta_y=0.05
+            delta_y = delta_movement
         elif delta_x_pixel<-40:
-            delta_y=-0.05
+            delta_y = -delta_movement
         #if it's too on the side in Y direction in the image move the robot on X 
         if delta_y_pixel>40:
-            delta_x=0.05
+            delta_x = delta_movement
         elif delta_y_pixel<-40:
-            delta_x=-0.05
+            delta_x = -delta_movement
         #if no horizontal movement the obj is centered, move down
         if delta_y==0 and delta_x ==0:
-            delta_z=-0.05
+            delta_z = -delta_movement
         #move
         print("DELTA MOVEMENT X:{} Y:{} Z:{}".format(delta_x, delta_y, delta_z))
         movement_valid = robot.set_cartesian_position([p.x+delta_x, p.y+delta_y, p.z+delta_z], [q.x, q.y, q.z, q.w])
