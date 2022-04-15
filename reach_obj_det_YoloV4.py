@@ -13,13 +13,14 @@ HEIGHT = 600
 DISPLAY_FACE=True
 unreachable_count=0
 garabbed=False
-OBJECT_DESIRED = "apple" #"carrot"
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--model', type=str, default='yolov4-new', help='Model desired')
+parser.add_argument('-o', '--object', type=str, default='apple', help='Object to reach and pick')
 args = parser.parse_args()
 model_list = ["yolov4","yolov4-new", "yolov4x-mish", "yolov4-p6"]
 
+OBJECT_DESIRED = args.object
 
 print("[INFO] loading model...")
 if args.model == model_list[0]:
@@ -63,7 +64,7 @@ elif args.model == model_list[2]:
     print("Classes: {}".format(len(classes)))
 
     #suggested
-    conf_threshold = 0.3
+    conf_threshold = 0.35
     nms_threshold = 0.01 #lower=stronger
 
 elif args.model == model_list[3]:
@@ -78,7 +79,7 @@ elif args.model == model_list[3]:
     print("Classes: {}".format(len(classes)))
 
     #suggested
-    conf_threshold = 0.3
+    conf_threshold = 0.35
     nms_threshold = 0.01 #lower=stronger
 
 else:
@@ -213,7 +214,7 @@ while not rospy.is_shutdown():
             object_present=True
             object_x = round(x+(w/2))
             object_y = round(y+(h/2))
-            center_object_x = round(WIDTH/2)
+            center_object_x = round(WIDTH/2)+20 #the gripper center is a little on the right of the image
             center_object_y = round(HEIGHT/2)-20 #the gripper is a litte up compared to the camera
             print("{} found at: {} {}, size: {} {}".format(classes[class_ids[i]],object_x,object_y, w,h))
             cv2.putText(img, "X", (object_x,object_y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 2) 
