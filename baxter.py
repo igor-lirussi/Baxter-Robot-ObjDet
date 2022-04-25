@@ -2,7 +2,7 @@ from copy import deepcopy
 
 import rospy
 import cv_bridge
-from baxter_core_msgs.msg import JointCommand, EndpointState, CameraSettings
+from baxter_core_msgs.msg import JointCommand, EndpointState, CameraSettings, CameraControl
 from baxter_core_msgs.msg import EndEffectorCommand, EndEffectorProperties, EndEffectorState
 from baxter_core_msgs.srv import OpenCamera, CloseCamera, SolvePositionIK, SolvePositionIKRequest
 from std_msgs.msg import Bool, Header
@@ -171,6 +171,23 @@ class BaxterRobot:
             settings.width = width
             settings.height = height
             settings.fps = fps
+            #gain
+            control = CameraControl.CAMERA_CONTROL_GAIN #gain 0 to 79 or -1 for auto
+            value = -1
+            lookup = [c for c in settings.controls if c.id == control]
+            try:
+                lookup[0].value = value
+            except IndexError:
+                settings.controls.append(CameraControl(control, value))
+            #exposure
+            control = CameraControl.CAMERA_CONTROL_EXPOSURE #exposure 0 to 100 or -1 for auto
+            value = -1
+            lookup = [c for c in settings.controls if c.id == control]
+            try:
+                lookup[0].value = value
+            except IndexError:
+                settings.controls.append(CameraControl(control, value))
+            #get response
             response = camera_proxy(camera_name, settings)
             return response
         else:
