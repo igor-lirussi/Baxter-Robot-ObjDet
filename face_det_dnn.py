@@ -1,6 +1,6 @@
 import time
 import rospy
-import baxter
+import baxter-python3.baxter
 import cv2
 import numpy as np
 

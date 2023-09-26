@@ -1,6 +1,6 @@
 import time
 import rospy
-import baxter
+import baxter-python3.baxter
 import cv2
 import numpy as np
 import argparse
@@ -26,6 +26,7 @@ if args.model == model_list[0]:
         classes = f.read().splitlines()
     print("Classes: {}".format(len(classes)))
 
+    #suggested
     conf_threshold = 0.1
     nms_threshold = 0.6 #lower=stronger
 

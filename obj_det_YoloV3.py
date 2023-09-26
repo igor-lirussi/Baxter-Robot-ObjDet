@@ -1,6 +1,6 @@
 import time
 import rospy
-import baxter
+import baxter-python3.baxter
 import cv2
 import numpy as np
 import argparse
@@ -26,6 +26,10 @@ if args.model == model_list[0]:
         classes = f.read().splitlines()
     print("Classes: {}".format(len(classes)))
 
+    #suggested
+    conf_threshold = 0.1 #confidence threshold
+    nms_threshold = 0.40 
+
 elif args.model == model_list[1]:
     #Load net
     modelConfig  = "./models/yolov3-openimages.cfg"
@@ -37,6 +41,10 @@ elif args.model == model_list[1]:
         classes = f.read().splitlines()
     print("Classes: {}".format(len(classes)))
 
+    #suggested
+    conf_threshold = 0.1 #confidence threshold
+    nms_threshold = 0.40 
+
 elif args.model == model_list[2]:
     #Load net
     modelConfig  = "./models/yolov3-openimages-spp.cfg"
@@ -47,6 +55,10 @@ elif args.model == model_list[2]:
     with open('./models/open_images.names', 'r') as f:
         classes = f.read().splitlines()
     print("Classes: {}".format(len(classes)))
+
+    #suggested
+    conf_threshold = 0.1 #confidence threshold
+    nms_threshold = 0.40 
 
 else:
     print("[Error] Model passed not present, choose between: {}".format(model_list))
@@ -114,8 +126,6 @@ while not rospy.is_shutdown():
     class_ids = []
     confidences = []
     boxes = []
-    conf_threshold = 0.1 #confidence threshold
-    nms_threshold = 0.40 
 
     # for each detetion from each output layer 
     # get the confidence, class id, bounding box params

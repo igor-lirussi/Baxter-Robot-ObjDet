@@ -1,10 +1,10 @@
 import time
 import rospy
-import baxter
+import baxter-python3.baxter
 import cv2
 import numpy as np
 import argparse
-from look import _set_look
+from baxter-python3.faces import _set_look
 from baxter_core_msgs.msg import EndpointState
 
 PI = 3.141592
