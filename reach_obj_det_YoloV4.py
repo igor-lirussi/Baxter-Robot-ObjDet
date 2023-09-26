@@ -1,10 +1,11 @@
 import time
 import rospy
-import baxter-python3.baxter
+import importlib
+baxter=importlib.import_module("baxter-python3.baxter")
+face=importlib.import_module("baxter-python3.faces")
 import cv2
 import numpy as np
 import argparse
-from baxter-python3.faces import _set_look
 from baxter_core_msgs.msg import EndpointState
 
 PI = 3.141592
@@ -126,14 +127,14 @@ rospy.sleep(2.0)
 robot.gripper_release()
 
 #display face
-_set_look(robot, "left_down", DISPLAY_FACE)
+face._set_look(robot, "left_down", DISPLAY_FACE)
 
 
 print("[INFO] moving in position...")
 print(robot.move_to_neutral())
-_set_look(robot, "left", DISPLAY_FACE)
+face._set_look(robot, "left", DISPLAY_FACE)
 print(robot.move_to_zero())
-_set_look(robot, "frontal", DISPLAY_FACE)
+face._set_look(robot, "frontal", DISPLAY_FACE)
 print(robot.move_to_joint_position({"left_s0": -PI/4}, timeout=10))
 data = np.array(list(robot._cam_image.data), dtype=np.uint8)
 middle_point = np.array([WIDTH/2, HEIGHT/2])
@@ -146,7 +147,7 @@ ori_x = 0.011154239796145276
 ori_y = 0.9989687054009745
 ori_z = -0.006554586552752852
 ori_w = 0.06499079561397379
-_set_look(robot, "down", DISPLAY_FACE)
+face._set_look(robot, "down", DISPLAY_FACE)
 robot.set_cartesian_position([pos_x, pos_y, pos_z], [ori_x, ori_y, ori_z, ori_w])
 
 print("[INFO] getting image stream and passing to DNN...")

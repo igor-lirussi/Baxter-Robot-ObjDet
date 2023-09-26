@@ -1,6 +1,7 @@
 import time
 import rospy
-import baxter-python3.baxter
+import importlib
+baxter=importlib.import_module("baxter-python3.baxter")
 import cv2
 import dlib  #requires pip install dlib
 import numpy as np
