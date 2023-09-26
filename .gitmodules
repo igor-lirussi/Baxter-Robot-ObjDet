@@ -1,0 +1,3 @@
+[submodule "baxter-python3"]
+	path = baxter-python3
+	url = git@github.com:igor-lirussi/baxter-python3.git
