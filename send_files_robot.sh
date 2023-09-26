@@ -17,7 +17,7 @@ if [ "$user_input" == "y" ]; then
 	done
 fi
 
-echo "Use scp to copy all files recursively to the remote server that should have the folders"
+echo "Use scp to copy all files recursively to the remote server that should have the folders, might ask for password"
 scp -r * "ruser@$remote_ip:$remote_dir"
 
 echo "#### Done, press any key ####"
