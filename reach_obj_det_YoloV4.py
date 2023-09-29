@@ -5,6 +5,7 @@ baxter=importlib.import_module("baxter-python3.baxter")
 face=importlib.import_module("baxter-python3.faces")
 import cv2
 import numpy as np
+import math
 import argparse
 from baxter_core_msgs.msg import EndpointState
 
@@ -15,16 +16,19 @@ DISPLAY_FACE=True
 unreachable_count=0
 garabbed=False
 
+model_list = ["yolov4","yolov4-new","yolov4x-mish","yolov4-p6","yolov4-colors"]
+
 parser = argparse.ArgumentParser()
-parser.add_argument('-m', '--model', type=str, default='yolov4-new', help='Model desired')
+parser.add_argument('-m', '--model', type=str, default='yolov4-colors', help='Model desired among '+str(model_list))
 parser.add_argument('-o', '--object', type=str, default='apple', help='Object to reach and pick')
+parser.add_argument('-a', '--arm', type=str, default='left', help='Arm, left or right')
 args = parser.parse_args()
-model_list = ["yolov4","yolov4-new", "yolov4x-mish", "yolov4-p6"]
 
 OBJECT_DESIRED = args.object
+side = args.arm
 
 print("[INFO] loading model...")
-if args.model == model_list[0]:
+if args.model == "yolov4":
     #Load net
     modelConfig  = "./models/yolov4.cfg"
     modelWeigths = "./models/yolov4.weights"
@@ -38,7 +42,7 @@ if args.model == model_list[0]:
     conf_threshold = 0.1
     nms_threshold = 0.6 #lower=stronger
 
-elif args.model == model_list[1]:
+elif args.model == "yolov4-new":
     #Load net
     modelConfig  = "./models/yolov4_new.cfg"
     modelWeigths = "./models/yolov4_new.weights"
@@ -53,7 +57,7 @@ elif args.model == model_list[1]:
     conf_threshold = 0.35
     nms_threshold = 0.03 #lower=stronger
 
-elif args.model == model_list[2]:
+elif args.model == "yolov4x-mish":
     #Load net
     modelConfig  = "./models/yolov4x-mish.cfg"
     modelWeigths = "./models/yolov4x-mish.weights"
@@ -68,7 +72,7 @@ elif args.model == model_list[2]:
     conf_threshold = 0.35
     nms_threshold = 0.01 #lower=stronger
 
-elif args.model == model_list[3]:
+elif args.model == "yolov4-p6":
     #Load net
     modelConfig  = "./models/yolov4-p6-1280x1280.cfg"
     modelWeigths = "./models/yolov4-p6-1280x1280.weights"
@@ -82,6 +86,21 @@ elif args.model == model_list[3]:
     #suggested
     conf_threshold = 0.35
     nms_threshold = 0.01 #lower=stronger
+
+elif args.model == "yolov4-colors":
+    #Load net
+    modelConfig  = "./models/yolov4-colors.cfg"
+    modelWeigths = "./models/yolov4-colors.weights"
+    net = cv2.dnn.readNetFromDarknet(modelConfig, modelWeigths)
+    print("Net Loaded: {}".format(args.model))
+
+    with open('./models/colors.names', 'r') as f:
+        classes = f.read().splitlines()
+    print("Classes: {}".format(len(classes)))
+
+    #suggested
+    conf_threshold = 0.35
+    nms_threshold = 0.6 #lower=stronger
 
 else:
     print("[Error] Model passed not present, choose between: {}".format(model_list))
@@ -114,9 +133,9 @@ def draw_bounding_box(img_yolo, class_id, confidence, x, y, x_plus_w, y_plus_h):
 print("[INFO] starting robot...")
 rospy.init_node("testing")
 rospy.sleep(2.0)
-robot = baxter.BaxterRobot(rate=100, arm="left")
+robot = baxter.BaxterRobot(rate=100, arm=side)
 rospy.sleep(2.0)
-robot._set_camera(camera_name="left_hand_camera", state=True, width=WIDTH, height=HEIGHT, fps=30)
+robot._set_camera(camera_name=side+"_hand_camera", state=True, width=WIDTH, height=HEIGHT, fps=30)
 robot.set_robot_state(True)
 
 
@@ -127,21 +146,24 @@ rospy.sleep(2.0)
 robot.gripper_release()
 
 #display face
-face._set_look(robot, "left_down", DISPLAY_FACE)
+face._set_look(robot, side+"_down", DISPLAY_FACE)
 
 
 print("[INFO] moving in position...")
 print(robot.move_to_neutral())
-face._set_look(robot, "left", DISPLAY_FACE)
+face._set_look(robot, side, DISPLAY_FACE)
 print(robot.move_to_zero())
 face._set_look(robot, "frontal", DISPLAY_FACE)
-print(robot.move_to_joint_position({"left_s0": -PI/4}, timeout=10))
 data = np.array(list(robot._cam_image.data), dtype=np.uint8)
 middle_point = np.array([WIDTH/2, HEIGHT/2])
 
 #move over the table
-pos_x = 0.8203694373186249
-pos_y = 0.08642622598662506
+if side=="left":
+    pos_x = 0.8203694373186249
+    pos_y = 0.08642622598662506
+else:
+    pos_x = 0.7456267492841516
+    pos_y = -0.18863639477015234
 pos_z = 0.28462916699929078
 ori_x = 0.011154239796145276
 ori_y = 0.9989687054009745
@@ -196,10 +218,24 @@ while not rospy.is_shutdown():
     indices = cv2.dnn.NMSBoxes(boxes, confidences, conf_threshold, nms_threshold)
     print("Detections: "+str(indices.shape[0])) if len(indices)!=0 else print("No Detections")
 
-    #object reset not detected and in the center
+    #set gripper center, different from image center, should be in between the tips of the gripper, a little down. 
+    gripper_delta_x=0
+    gripper_delta_y=0
+    if side=="left": #cameras in hands can be slightly diffenent angles, so center of gripper in the images is different
+        gripper_delta_x=20
+        gripper_delta_y=-30
+    elif side=="right":
+        gripper_delta_x=40
+        gripper_delta_y=-100
+    #center for the calculations
+    center_object_x = round(WIDTH/2)+gripper_delta_x # usually the gripper center is a little on the right of the image of camera
+    center_object_y = round(HEIGHT/2)+gripper_delta_y # usually the gripper is a litte up compared to the camera
+    
+    #object reset: not detected and in the center
     object_present=False
-    object_x=WIDTH/2
-    object_y=HEIGHT/2
+    objects_list=[]
+    object_x=0
+    object_y=0
     # go through the detections remaining
     # after nms and draw bounding box
     for i in indices:
@@ -210,38 +246,36 @@ while not rospy.is_shutdown():
         w = box[2]
         h = box[3]
         draw_bounding_box(img, class_ids[i], confidences[i], round(x), round(y), round(x+w), round(y+h))
-        #save X Y object if present
+        #save (X Y) object if present
         if classes[class_ids[i]] == OBJECT_DESIRED:
             object_present=True
             object_x = round(x+(w/2))
             object_y = round(y+(h/2))
-            center_object_x = round(WIDTH/2)+20 #the gripper center is a little on the right of the image
-            center_object_y = round(HEIGHT/2)-20 #the gripper is a litte up compared to the camera
+            objects_list.append((object_x,object_y))
             print("{} found at: {} {}, size: {} {}".format(classes[class_ids[i]],object_x,object_y, w,h))
             cv2.putText(img, "X", (object_x,object_y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 2) 
             cv2.putText(img, "O", (center_object_x,center_object_y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 3) 
 
+    #object is selected as the closest one if there are many
+    if len(objects_list) > 1:
+        print("Many found, finding the closest")
+        closest_distance = float('inf')  
+        for x, y in objects_list:
+            # Calculate Euclidean distance between the current point and the target point
+            distance = math.sqrt((x - center_object_x) ** 2 + (y - center_object_y) ** 2)
+            if distance < closest_distance:
+                closest_distance = distance
+                object_x, object_y = (x, y)
+
+    #put different color mark on object selected
+    cv2.putText(img, "X", (object_x,object_y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2) 
     
-    #if near: grab
+    #check infrared distance
     if robot._ir_range.range > robot._ir_range.min_range and robot._ir_range.range < robot._ir_range.max_range:
         current_range = robot._ir_range.range
         distance_str= "Dist: {:0.2f}".format(robot._ir_range.range)
         print(distance_str)
         cv2.putText(img, distance_str, (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 2) 
-        if current_range < 0.15  and not garabbed:
-            print("[info] Gripper close enough, GRASPING")
-            garabbed = True
-            #grab
-            robot.gripper_grip()
-            rospy.sleep(2.0)
-            #move
-            robot.set_cartesian_position([pos_x, pos_y, pos_z], [ori_x, ori_y, ori_z, ori_w])
-            robot.move_to_zero()
-            rospy.sleep(2.0)
-            robot.gripper_release()
-            garabbed=False
-            rospy.sleep(2.0)
-            robot.set_cartesian_position([pos_x, pos_y, pos_z], [ori_x, ori_y, ori_z, ori_w])
     else:
         current_range = 9999
         print("Range sensor out of limits")
@@ -250,10 +284,27 @@ while not rospy.is_shutdown():
     #display image
     robot._set_display_data(cv2.resize(img, (1024,600)))
 
+    #if too close, grab
+    if object_present and current_range < 0.16 and not garabbed:
+        print("[info] Gripper CLOSE enough and object present, GRABBING without more movements")
+        #face._set_face(robot, "determined", DISPLAY_FACE)
+        #grab
+        garabbed = True
+        robot.gripper_grip()
+        rospy.sleep(2.0)
+        #move
+        robot.set_cartesian_position([pos_x, pos_y, pos_z], [ori_x, ori_y, ori_z, ori_w])
+        robot.move_to_zero()
+        rospy.sleep(2.0)
+        robot.gripper_release()
+        garabbed=False
+        rospy.sleep(2.0)
+        robot.set_cartesian_position([pos_x, pos_y, pos_z], [ori_x, ori_y, ori_z, ori_w])
+
     #if present and not close enough: move towards it
     if object_present and not garabbed:
         #get current arm position
-        msg = rospy.wait_for_message("/robot/limb/left/endpoint_state", EndpointState)
+        msg = rospy.wait_for_message("/robot/limb/"+side+"/endpoint_state", EndpointState)
         p = msg.pose.position
         q = msg.pose.orientation
         #compute deviation in image

@@ -12,6 +12,7 @@ models/yolov4.weights
 models/yolov4_new.weights
 models/yolov4x-mish.weights
 models/yolov4-csp.weights
+models/yolov4-colors.weights
 
 
 
