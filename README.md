@@ -9,7 +9,7 @@ The code allows the robot:
 > The models of large size in the folder models can be downloaded from the [releases](https://github.com/igor-lirussi/Baxter-Robot-ObjDet/releases)
 
 ## Result
-[![Baxter Video](http://i3.ytimg.com/vi/gk2gCOgdb-M/maxresdefault.jpg)](https://youtu.be/gk2gCOgdb-M "Baxter Video")
+[![Baxter Video](/img/thumbnail_video.JPG)](https://youtu.be/gk2gCOgdb-M "Baxter Video")
 
 
 ### Jupyter Notebooks
