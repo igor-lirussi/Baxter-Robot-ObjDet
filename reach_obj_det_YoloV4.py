@@ -115,7 +115,10 @@ print("Colors generated: "+str(colors.shape[0]))
 # in the architecture
 def get_output_layers(net):
     layer_names = net.getLayerNames()
-    output_layers = [layer_names[i[0] - 1] for i in net.getUnconnectedOutLayers()]
+    output_layers = []
+    for i in net.getUnconnectedOutLayers():
+        i = i[0] #DEPENDING ON YOUR OPENCV VERSION delete this line and similars in the code (i it's not an array anymore) 
+        output_layers.append(layer_names[i-1])
     return output_layers
 
 # function to draw bounding box on the detected object with class name
@@ -134,6 +137,7 @@ print("[INFO] starting robot...")
 rospy.init_node("testing")
 rospy.sleep(2.0)
 robot = baxter.BaxterRobot(rate=100, arm=side)
+face._set_look(robot, side, DISPLAY_FACE)
 rospy.sleep(2.0)
 robot._set_camera(camera_name=side+"_hand_camera", state=True, width=WIDTH, height=HEIGHT, fps=30)
 robot.set_robot_state(True)
@@ -239,7 +243,7 @@ while not rospy.is_shutdown():
     # go through the detections remaining
     # after nms and draw bounding box
     for i in indices:
-        i = i[0]
+        i = i[0] #DEPENDING ON YOUR OPENCV VERSION delete this line and similars in the code (i it's not an array anymore)
         box = boxes[i]
         x = box[0]
         y = box[1]
@@ -285,9 +289,9 @@ while not rospy.is_shutdown():
     robot._set_display_data(cv2.resize(img, (1024,600)))
 
     #if too close, grab
-    if object_present and current_range < 0.16 and not garabbed:
+    if current_range < 0.16 and not garabbed:
         print("[info] Gripper CLOSE enough and object present, GRABBING without more movements")
-        #face._set_face(robot, "determined", DISPLAY_FACE)
+        face._set_face(robot, "determined", DISPLAY_FACE)
         #grab
         garabbed = True
         robot.gripper_grip()

@@ -3,10 +3,14 @@ Repository for some experiments with Baxter robot and Object Detection.
 
 The code allows the robot:
 - to detect different objects,
-- approach them with his arm, indipendently from their position on the table in front of it,
+- approach them with his arm, independently from their position on the table in front of it,
 - pick them up safely and move them.
 
 > The models of large size in the folder models can be downloaded from the [releases](https://github.com/igor-lirussi/Baxter-Robot-ObjDet/releases)
+
+## Result
+[![Baxter Video](http://i3.ytimg.com/vi/gk2gCOgdb-M/maxresdefault.jpg)](https://youtu.be/gk2gCOgdb-M "Baxter Video")
+
 
 ### Jupyter Notebooks
 The notebooks contain some examples of image processing with OpenCV and Pyhton.
@@ -26,7 +30,7 @@ In the [releases](https://github.com/igor-lirussi/Baxter-Robot-ObjDet/releases) 
 - yolov4-colors.cfg
 - yolov4-colors.weights
 
-!(dataset)[img/dataset.jpg]
+![dataset](img/dataset.jpg)
 
 ## Built With
 
@@ -35,6 +39,7 @@ In the [releases](https://github.com/igor-lirussi/Baxter-Robot-ObjDet/releases) 
 ## Changelog
 
 **Version 1.0** - Initial release, 31-01-2022
+
 **Version 1.1** - Added Colors yolov4 trained net, 28-09-2023
 
 ## Authors
