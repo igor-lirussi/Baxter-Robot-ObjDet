@@ -226,8 +226,8 @@ while not rospy.is_shutdown():
     gripper_delta_x=0
     gripper_delta_y=0
     if side=="left": #cameras in hands can be slightly diffenent angles, so center of gripper in the images is different
-        gripper_delta_x=20
-        gripper_delta_y=-30
+        gripper_delta_x=40
+        gripper_delta_y=-60
     elif side=="right":
         gripper_delta_x=40
         gripper_delta_y=-100
