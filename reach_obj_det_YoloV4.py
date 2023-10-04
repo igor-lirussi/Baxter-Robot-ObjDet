@@ -134,7 +134,8 @@ def draw_bounding_box(img_yolo, class_id, confidence, x, y, x_plus_w, y_plus_h):
     
 
 print("[INFO] starting robot...")
-rospy.init_node("testing")
+np.random.seed()
+rospy.init_node("testing"+str(np.random.randint(100))) #random node name so multiple can exist
 rospy.sleep(2.0)
 robot = baxter.BaxterRobot(rate=100, arm=side)
 face._set_look(robot, side, DISPLAY_FACE)
