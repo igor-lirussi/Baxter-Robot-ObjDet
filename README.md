@@ -11,6 +11,12 @@ The code allows the robot:
 ## Result
 [![Baxter Video](/img/thumbnail_video.JPG)](https://youtu.be/gk2gCOgdb-M "Baxter Video")
 
+## Run
+Please clone this repo with "recurse-submodules" option, or the submodules will be missing:
+'''
+git clone --recurse-submodules git@github.com:igor-lirussi/Baxter-Robot-ObjDet.git
+'''
+run '''python reach_obj_det_YoloV4.py --help''' for info on executing it.
 
 ### Jupyter Notebooks
 The notebooks contain some examples of image processing with OpenCV and Pyhton.
