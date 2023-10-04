@@ -13,10 +13,10 @@ The code allows the robot:
 
 ## Run
 Please clone this repo with "recurse-submodules" option, or the submodules will be missing:
-'''
+```
 git clone --recurse-submodules git@github.com:igor-lirussi/Baxter-Robot-ObjDet.git
-'''
-run '''python reach_obj_det_YoloV4.py --help''' for info on executing it.
+```
+run ```python reach_obj_det_YoloV4.py --help``` for info on executing it.
 
 ### Jupyter Notebooks
 The notebooks contain some examples of image processing with OpenCV and Pyhton.
@@ -24,9 +24,9 @@ The notebooks contain some examples of image processing with OpenCV and Pyhton.
 The notebooks study both face detection and object-detection.
 
 If it's not in the right path, open the notebook with Anaconda Propt passing the correct disk. Example:
-'''
+```
 jupyter notebook --notebook-dir=D:
-'''
+```
 
 ### Colors Toys Object Detection Model
 A Yolo v4 model has been trained to detect 9 different classes of food toys present in CoLoRs Lab. 
