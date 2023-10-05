@@ -8,6 +8,27 @@ import numpy as np
 import math
 import argparse
 from baxter_core_msgs.msg import EndpointState
+# for audio play required playsound
+from playsound import playsound
+from whisper_mic_igor import WhisperMicIgor #requires a conda env with whisper-mic installed and opencv (opencv-python) and ros (rospkg) 
+# https://github.com/mallorbc/whisper_mic/
+# if you have problems with wrong libffi (since opencv and ros conflics) conda install libffi==3.3
+# do not call your code "whisper.py" will create circular dependency
+# if you have a lot of ALSA messages sudo nano /usr/share/alsa/alsa.conf (https://github.com/Uberi/speech_recognition/issues/526) (https://stackoverflow.com/questions/7088672/pyaudio-working-but-spits-out-error-messages-each-time)
+# or set this handler to asound library
+from ctypes import *
+ERROR_HANDLER_FUNC = CFUNCTYPE(None, c_char_p, c_int, c_char_p, c_int, c_char_p)
+def py_error_handler(filename, line, function, err, fmt):
+  #print('error received')
+  pass
+c_error_handler = ERROR_HANDLER_FUNC(py_error_handler)
+asound = cdll.LoadLibrary('libasound.so')
+# Set error handler of asound libray to the previous one
+asound.snd_lib_error_set_handler(c_error_handler)
+
+# create mic module
+mic = WhisperMicIgor(model="base",english=True,verbose=False,energy=900,pause=1.8,dynamic_energy=False,save_file=False, model_root="~/.cache/whisper",mic_index=None) #in the console whisper_mic --help for info on usage
+
 
 PI = 3.141592
 WIDTH = 960
@@ -20,11 +41,13 @@ model_list = ["yolov4","yolov4-new","yolov4x-mish","yolov4-p6","yolov4-colors"]
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--model', type=str, default='yolov4-colors', help='Model desired among '+str(model_list))
-parser.add_argument('-o', '--object', type=str, default='apple', help='Object to reach and pick')
 parser.add_argument('-a', '--arm', type=str, default='left', help='Arm, left or right')
 args = parser.parse_args()
 
-OBJECT_DESIRED = args.object
+OBJECT_DESIRED=""  
+print("VOICE: hello")
+playsound("./sounds/hello.mp3")
+
 side = args.arm
 
 print("[INFO] loading model...")
@@ -117,7 +140,6 @@ def get_output_layers(net):
     layer_names = net.getLayerNames()
     output_layers = []
     for i in net.getUnconnectedOutLayers():
-        i = i[0] #DEPENDING ON YOUR OPENCV VERSION delete this line and similars in the code (i it's not an array anymore) 
         output_layers.append(layer_names[i-1])
     return output_layers
 
@@ -179,6 +201,24 @@ robot.set_cartesian_position([pos_x, pos_y, pos_z], [ori_x, ori_y, ori_z, ori_w]
 
 print("[INFO] getting image stream and passing to DNN...")
 while not rospy.is_shutdown():
+
+    if OBJECT_DESIRED=="":  
+        print("VOICE: what_obj")
+        playsound("./sounds/what_obj.mp3")
+        print("Listen")
+        result = mic.listen(phrase_time_limit=20)
+        print("RESULT: "+result)
+        for obj in classes:
+            if obj in result:
+                OBJECT_DESIRED = obj
+                print("class found in string: "+obj)
+                print("VOICE: obj_known")
+                playsound("./sounds/obj_known.mp3")
+    if OBJECT_DESIRED=="":
+        print("no class found in string")
+        print("VOICE: obj_not_known")
+        playsound("./sounds/obj_not_known.mp3")
+
     img = np.array(list(robot._cam_image.data), dtype=np.uint8)
     img = img.reshape(int(HEIGHT), int(WIDTH), 4)
     img = img[:, :, :3].copy()
@@ -244,7 +284,6 @@ while not rospy.is_shutdown():
     # go through the detections remaining
     # after nms and draw bounding box
     for i in indices:
-        i = i[0] #DEPENDING ON YOUR OPENCV VERSION delete this line and similars in the code (i it's not an array anymore)
         box = boxes[i]
         x = box[0]
         y = box[1]
@@ -292,6 +331,9 @@ while not rospy.is_shutdown():
     #if too close, grab
     if current_range < 0.16 and not garabbed:
         print("[info] Gripper CLOSE enough and object present, GRABBING without more movements")
+        print("VOICE: Here we go!")
+        playsound("./sounds/grasp_moment.mp3")
+        OBJECT_DESIRED=""  
         face._set_face(robot, "determined", DISPLAY_FACE)
         #grab
         garabbed = True
@@ -346,6 +388,8 @@ while not rospy.is_shutdown():
             unreachable_count=unreachable_count+1
             print("[info] Movement Unreachable count: {}".format(unreachable_count))
         elif not movement_valid and unreachable_count>3:
+            print("VOICE: out_reach")
+            playsound("./sounds/out_reach.mp3")
             face._set_face(robot, "worried", DISPLAY_FACE)
             #set to origin
             print("[info] Moving to Origin")

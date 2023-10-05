@@ -74,7 +74,10 @@ print("Colors generated: "+str(colors.shape[0]))
 # in the architecture
 def get_output_layers(net):
     layer_names = net.getLayerNames()
-    output_layers = [layer_names[i[0] - 1] for i in net.getUnconnectedOutLayers()]
+    output_layers = []
+    for i in net.getUnconnectedOutLayers():
+        i = i[0] #DEPENDING ON YOUR OPENCV VERSION delete this line and similars in the code (i it's not an array anymore) 
+        output_layers.append(layer_names[i-1])
     return output_layers
 
 # function to draw bounding box on the detected object with class name
@@ -154,7 +157,7 @@ while not rospy.is_shutdown():
     # go through the detections remaining
     # after nms and draw bounding box
     for i in indices:
-        i = i[0]
+        i = i[0] #DEPENDING ON YOUR OPENCV VERSION delete this line and similars in the code (i it's not an array anymore) 
         box = boxes[i]
         x = box[0]
         y = box[1]
