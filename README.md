@@ -9,7 +9,7 @@ The code allows the robot:
 > The models of large size in the folder models can be downloaded from the [releases](https://github.com/igor-lirussi/Baxter-Robot-ObjDet/releases)
 
 ## Result
-[![Baxter Video](/img/thumbnail_video.JPG)](https://youtu.be/gk2gCOgdb-M "Baxter Video")
+[![Baxter Video](/img/thumbnail_video.JPG)](https://youtu.be/r5xqb5S5HgY "Baxter Video")
 
 ## Run
 Please clone this repo with "recurse-submodules" option, or the submodules will be missing:
