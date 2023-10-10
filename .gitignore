@@ -15,7 +15,7 @@ models/yolov4-csp.weights
 models/yolov4-colors.weights
 models/yolov4-colors_10000.weights
 models/yolov4-colors_best.weights
-
+tts.mp3
 
 
 
