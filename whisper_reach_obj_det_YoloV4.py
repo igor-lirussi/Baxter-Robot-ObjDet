@@ -207,6 +207,7 @@ while not rospy.is_shutdown():
         playsound("./sounds/what_obj.mp3")
         print("Listen")
         result = mic.listen(phrase_time_limit=20)
+        result = result.lower()
         print("RESULT: "+result)
         for obj in classes:
             if obj in result:
