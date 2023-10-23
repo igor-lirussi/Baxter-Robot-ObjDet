@@ -338,7 +338,7 @@ while not rospy.is_shutdown():
             delta_z = -delta_movement
         #move
         print("DELTA MOVEMENT X:{} Y:{} Z:{}".format(delta_x, delta_y, delta_z))
-        movement_valid = robot.set_cartesian_position([p.x+delta_x, p.y+delta_y, p.z+delta_z], [q.x, q.y, q.z, q.w])
+        movement_valid = robot.set_cartesian_position([p.x+delta_x, p.y+delta_y, p.z+delta_z], [q.x, q.y, q.z, q.w], override_current_movement=False)
         if movement_valid:
             print("[info] Movement OK")
             unreachable_count=0
